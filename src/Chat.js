@@ -6,17 +6,40 @@ import AttachFileIcon from "@material-ui/icons/AttachFile";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import MoodIcon from "@material-ui/icons/Mood";
 import MicIcon from "@material-ui/icons/Mic";
+import axios from "axios";
+import ChatMessage from "./ChatMessage";
 
 function Chat() {
+
   const [input, setInput] = useState("");
   const [seed, setSeed] = useState("");
+  const [messages, setMessages] = useState([]);
+
   useEffect(() => {
+    axios
+      .get("http://localhost:8000/")
+      .then((res) => {
+        setMessages(res.data);
+      })
+      .catch((err) => console.log(err));
     setSeed(Math.floor(Math.random() * 5000));
   }, []);
 
   const sendMessage = (e) => {
     e.preventDefault();
-    console.log(input);
+    const d = new Date();
+    const datetext = d.getHours() + ":" + d.getMinutes();
+    axios
+      .post("http://localhost:8000/", {
+        message: input,
+        time: datetext,
+      })
+      .then((res) => {
+        const msg = [...messages];
+        msg.push(res.data);
+        setMessages(msg);
+        setInput("");
+      });
   };
 
   return (
@@ -40,11 +63,9 @@ function Chat() {
         </div>
       </div>
       <div className="chat__body">
-        <p className={`chat__message ${true && "chat__reciever"}`}>
-          <span className="chat__name">chat name</span>
-          hi hello
-          <span className="chat__time">3:15</span>
-        </p>
+        {messages.map((data) => (
+          <ChatMessage key={data._id} message={data} />
+        ))}
       </div>
       <div className="chat__footer">
         <MoodIcon />
