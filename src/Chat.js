@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./Chat.css";
 import { Avatar, IconButton } from "@material-ui/core";
 import SearchOutlined from "@material-ui/icons/SearchOutlined";
@@ -6,40 +6,26 @@ import AttachFileIcon from "@material-ui/icons/AttachFile";
 import MoreVertIcon from "@material-ui/icons/MoreVert";
 import MoodIcon from "@material-ui/icons/Mood";
 import MicIcon from "@material-ui/icons/Mic";
-import axios from "axios";
-import ChatMessage from "./ChatMessage";
+import axios from "./axios";
 
-function Chat() {
-
+function Chat({ messages }) {
   const [input, setInput] = useState("");
   const [seed, setSeed] = useState("");
-  const [messages, setMessages] = useState([]);
-
+  const [user, setUser] = useState("");
   useEffect(() => {
-    axios
-      .get("http://localhost:8000/")
-      .then((res) => {
-        setMessages(res.data);
-      })
-      .catch((err) => console.log(err));
-    setSeed(Math.floor(Math.random() * 5000));
+    const userName = prompt("enter your nick name");
+    setUser(userName);
   }, []);
 
-  const sendMessage = (e) => {
+  const sendMessage = async (e) => {
     e.preventDefault();
-    const d = new Date();
-    const datetext = d.getHours() + ":" + d.getMinutes();
-    axios
-      .post("http://localhost:8000/", {
-        message: input,
-        time: datetext,
-      })
-      .then((res) => {
-        const msg = [...messages];
-        msg.push(res.data);
-        setMessages(msg);
-        setInput("");
-      });
+    await axios.post("/message/post", {
+      message: input,
+      user: user,
+      time: "just now",
+      recevied: true,
+    });
+    setInput("");
   };
 
   return (
@@ -63,8 +49,16 @@ function Chat() {
         </div>
       </div>
       <div className="chat__body">
-        {messages.map((data) => (
-          <ChatMessage key={data._id} message={data} />
+        {messages.map((message) => (
+          <p
+            className={`chat__message ${
+              user == message.user && "chat__reciever"
+            }`}
+          >
+            <span className="chat__name">{message.user}</span>
+            {message.message}
+            <span className="chat__time">{message.time}</span>
+          </p>
         ))}
       </div>
       <div className="chat__footer">
